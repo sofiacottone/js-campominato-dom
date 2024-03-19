@@ -10,30 +10,49 @@
 
 const playBtn = document.querySelector('#play-btn');
 const mainGrid = document.querySelector('#grid');
+let userMessage = document.querySelector('#user-message');
+console.log(userMessage);
 
 playBtn.addEventListener('click', function () {
     // reset griglia
     mainGrid.innerHTML = '';
+    userMessage.innerHTML = '';
+
 
     // creo una variabile contenente la scelta dell'utente
     let levelValue = document.querySelector('#level').value;
     console.log('Difficulty:', levelValue);
 
-    let numSquare;
+    // stabilisco il numero degli square in base al livello
+    let squareNumber;
+
     if (levelValue === 'Easy') {
-        numSquare = 100;
-
+        squareNumber = 100;
     } else if (levelValue === 'Medium') {
-        numSquare = 81;
-
+        squareNumber = 81;
     } else if (levelValue === 'Hard') {
-        numSquare = 49;
-
+        squareNumber = 49;
     }
+    console.log('Number of squares:', squareNumber);
+
+    // punti
+    let points = 0;
+    // numero di bombe
+    const numberOfBombs = 16;
+    // tentativi massimi che può fare l'utente
+    const numberOfAttempts = squareNumber - numberOfBombs;
+    // dichiaro una variabile per determinare la fine del gioco
+    let isGameOver = false;
+
+    // creo un array che conterrà le 16 bombe
+    const bomb = generateBombsArray(numberOfBombs, 1, squareNumber)
+    console.log(bomb);
 
     // creo i div utilizzando una funzione
-    for (let i = 1; i <= numSquare; i++) {
-        const square = generateSquare(i, levelValue);
+    for (let i = 1; i <= squareNumber; i++) {
+        const thisNumber = i;
+        const square = generateSquare(i);
+
         square.classList.add('square', 'border', 'd-flex', 'justify-content-center', 'align-items-center');
 
         if (levelValue === 'Easy') {
@@ -46,12 +65,39 @@ playBtn.addEventListener('click', function () {
             square.classList.add('ms-hard');
 
         }
+        // gestione click sugli square
+        square.addEventListener('click', function () {
+            // solo se il gico non è finito
+            if (!isGameOver) {
+                // per far sì che non posso cliccare due volte sullo stesso square (disattivo ogni interazione possibile su quel div)
+                this.style.pointerEvents = 'none';
+                // se bomba, classe 'bg-danger'
+                if (bomb.includes(thisNumber)) {
+                    this.classList.add('bg-danger', 'text-white');
+                    // gioco finito = you lose!
+                    userMessage.innerHTML = `You lose! You scored ${points} points.`;
+                    console.log(userMessage);
+                    isGameOver = true;
+                } else {
+                    // altrimenti
+                    this.classList.add('bg-info');
+                    ++points;
 
+                    // se numero massimo di tentativi raggiunto = win
+                    if (points === numberOfAttempts) {
+                        userMessage.innerHTML = `You win! You scored ${points} points.`;
+                        isGameOver = true;
+                    }
+                }
+            }
+            console.log('points:', points);
+
+
+        })
         mainGrid.append(square);
     }
 });
 
-// square.classList.add('ms-hard')
 
 
 
@@ -61,25 +107,12 @@ playBtn.addEventListener('click', function () {
 // funzione per generare un quadrato (div) contenente un numero progressivo limitato da choice
 // con un event listener per aggiungere una classe al click che cambia lo sfondo del quadrato
 // number -> numero intero
-// choice -> stringa per determinare la classe da inserire nel div generato
 // return -> torna un elemento del DOM che rappresenta un quadrato
-function generateSquare(number, choice) {
+function generateSquare(number) {
 
     const newSquare = document.createElement('div');
 
-    // newSquare.classList.add(`ms-${levelValue}`.toLowerCase);
     newSquare.innerHTML = `<span>${number}</span>`;
-
-
-    // gestione del click su ogni quadrato
-    newSquare.addEventListener('click', function () {
-        this.classList.toggle('bg-info');
-
-        // console log del numero all'interno della cella (solo al primo click - se toggle - altrimenti togliere if)
-        if (this.classList.contains('bg-info')) {
-            console.log('clicked square:', number);
-        }
-    })
 
     return newSquare;
 
@@ -118,6 +151,26 @@ function getRandomUniqueNumber(min, max, blackList) {
         }
     }
     return randomNumber;
+}
+
+// 4
+// genere un array di numeri casuali
+// array.length -> num intero che rappresenta la lunghezza finale dell'array
+// rangeMin --> numero intero che definisce il range minimo del numero random da generare
+// rangeMax --> range massimo del numero random da generare
+// retunr -> array di num casuali 
+function generateBombsArray(arrayLength, rangeMin, rangeMax) {
+    let randomArray = [];
+
+    // popolo l'array con un numero random solo se non esiste già e finché l'array non contiene a 16 elementi
+    while (randomArray.length < arrayLength) {
+        let randomBomb = getRndInteger(rangeMin, rangeMax);
+
+        if (!randomArray.includes(randomBomb)) {
+            randomArray.push(randomBomb);
+        }
+    }
+    return randomArray;
 }
 
 //#endregion FUNCTIONS
